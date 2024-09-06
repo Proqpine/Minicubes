@@ -2,94 +2,87 @@ package main
 
 import (
 	"bufio"
-	"errors"
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 )
 
 var (
-	ytes  string
-	lines string
-	words string
+	bytesFlag bool
+	linesFlag bool
+	wordsFlag bool
+	charsFlag bool
 )
 
 func main() {
-	flag.StringVar(&ytes, "c", "", "number of bytes in a file")
-	flag.StringVar(&lines, "l", "", "number of lines in a file")
-	flag.StringVar(&words, "w", "", "number of words in a file")
+	flag.BoolVar(&bytesFlag, "c", false, "number of bytes in a file")
+	flag.BoolVar(&linesFlag, "l", false, "number of lines in a file")
+	flag.BoolVar(&wordsFlag, "w", false, "number of words in a file")
+	flag.BoolVar(&charsFlag, "m", false, "number of characters in a file")
+
 	flag.Parse()
 
-	if ytes != "" {
-		ByteCount(ytes)
-	} else if lines != "" {
-		LineCount(lines)
-	} else if words != "" {
-		WordsCount(words)
-	}
-}
+	args := flag.Args()
 
-func checkFile(filePath string) bool {
-	_, error := os.Stat(filePath)
-	//return !os.IsNotExist(err)
-	return !errors.Is(error, os.ErrNotExist)
-}
-
-func ByteCount(input string) {
-	isFile := checkFile(input)
-	if isFile {
-		content, err := os.ReadFile(input)
-		if err != nil {
-			fmt.Printf("%d", len(input))
-		}
-		fmt.Printf("%d %s", len(content), input)
+	if len(args) == 0 {
+		// No file specified, read from stdin
+		scanner := bufio.NewScanner(os.Stdin)
+		processInput(scanner)
 	} else {
-		fmt.Printf("%d %s", len(input), input)
-	}
+		// File specified
+		for _, filePath := range args {
+			if _, err := os.Stat(filePath); os.IsNotExist(err) {
+				fmt.Fprintf(os.Stderr, "File %s does not exist\n", filePath)
+				continue
+			}
+			file, err := os.Open(filePath)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error opening file %s: %v\n", filePath, err)
+				continue
+			}
+			defer file.Close()
 
-}
-
-func LineCount(input string) {
-	isFile := checkFile(input)
-	if isFile {
-		content, err := os.Open(input)
-		if err != nil {
-			fmt.Println(err)
+			scanner := bufio.NewScanner(file)
+			processInput(scanner)
+			fmt.Printf(" %s\n", filePath)
 		}
-		defer content.Close()
-
-		fileScanner := bufio.NewScanner(content)
-		fileScanner.Split(bufio.ScanLines)
-
-		var fileLines []string
-
-		for fileScanner.Scan() {
-			fileLines = append(fileLines, fileScanner.Text())
-		}
-
-		fmt.Printf("%d %s", len(fileLines), input)
-	} else {
-		fmt.Println("Hello")
 	}
 }
 
-func WordsCount(input string) {
-	isFile := checkFile(input)
-	if isFile {
-		content, err := os.Open(input)
-		if err != nil {
-			fmt.Println(err)
-		}
-		defer content.Close()
+func processInput(scanner *bufio.Scanner) {
+	var lines, words, chars, bytes int
 
-		fileScanner := bufio.NewScanner(content)
-		fileScanner.Split(bufio.ScanWords)
-		var fileWords []string
-
-		for fileScanner.Scan() {
-			fileWords = append(fileWords, fileScanner.Text())
-		}
-
-		fmt.Printf("%d %s", len(fileWords), input)
+	for scanner.Scan() {
+		line := scanner.Text()
+		lines++
+		words += len(splitWords(line))
+		chars += len(line)
+		bytes += len([]byte(line))
 	}
+
+	if linesFlag {
+		fmt.Printf("%8d", lines)
+	}
+	if wordsFlag {
+
+		fmt.Printf("%8d", words)
+	}
+	if charsFlag {
+		fmt.Printf("%8d", chars)
+	}
+	if bytesFlag {
+		fmt.Printf("%8d", bytes)
+	}
+}
+
+func splitWords(input string) []string {
+	scanner := bufio.NewScanner(strings.NewReader(input))
+	scanner.Split(bufio.ScanWords)
+
+	var words []string
+	for scanner.Scan() {
+		words = append(words, scanner.Text())
+	}
+	return words
 }

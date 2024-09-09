@@ -36,6 +36,7 @@ func handleConnections(conn net.Conn) {
 		return
 	}
 	fmt.Printf("Received: %s", buf)
+
 	response := "HTTP/1.1 200 OK\r\nContent-Length: 25\r\n\r\nHello From Backend Server"
 	_, err = conn.Write([]byte(response))
 	if err != nil {

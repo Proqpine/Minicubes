@@ -2,12 +2,11 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"net"
 )
 
 func main() {
-	ln, err := net.Listen("tcp", ":80")
+	ln, err := net.Listen("tcp", ":8080")
 	if err != nil {
 		panic(err)
 	}
@@ -15,7 +14,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("Listening port: %s\n", port)
+	fmt.Printf("Backend listening on port: %s\n", port)
 
 	for {
 		conn, err := ln.Accept()
@@ -37,38 +36,11 @@ func handleConnections(conn net.Conn) {
 		return
 	}
 	fmt.Printf("Received: %s", buf)
-
-	// data := []byte("Hello World")
-	data, err := sendRequest(buf)
-	if err != nil {
-		fmt.Println("Error forwarding to backend:", err)
-		return
-	}
-
-	_, err = conn.Write(data)
+	response := "HTTP/1.1 200 OK\r\nContent-Length: 25\r\n\r\nHello From Backend Server"
+	_, err = conn.Write([]byte(response))
 	if err != nil {
 		fmt.Println("Error writing to client:", err)
 		return
 	}
-
-}
-
-func sendRequest(data []byte) ([]byte, error) {
-	conn, err := net.Dial("tcp", ":8080")
-	if err != nil {
-		return nil, err
-	}
-
-	defer conn.Close()
-
-	_, err = conn.Write(data)
-	if err != nil {
-		return nil, err
-	}
-
-	response, err := io.ReadAll(conn)
-	if err != nil {
-		return nil, err
-	}
-	return response, nil
+	fmt.Println("Replied with a hello message")
 }

@@ -4,12 +4,21 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"net/http"
+	"sync"
+	"time"
 )
 
 type Server struct {
 	Order int
 	Addr  string
 }
+
+var (
+	mu              sync.Mutex
+	activeServers   []Server
+	inactiveServers []Server
+)
 
 func (s *Server) getServer(num int) string {
 	if s.Order == num {
@@ -20,7 +29,7 @@ func (s *Server) getServer(num int) string {
 }
 
 func main() {
-	servers := []Server{
+	activeServers = []Server{
 		{
 			Order: 1,
 			Addr:  ":8080",
@@ -29,17 +38,27 @@ func main() {
 			Order: 2,
 			Addr:  ":8081",
 		},
+		{
+			Order: 3,
+			Addr:  ":8082",
+		},
 	}
 
 	ln, err := net.Listen("tcp", ":80")
 	if err != nil {
 		panic(err)
 	}
+
+	defer ln.Close()
+
 	_, port, err := net.SplitHostPort(ln.Addr().String())
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("Listening port: %s\n", port)
+
+	fmt.Printf("Listening on port: %s\n", port)
+
+	go startHealthChecks()
 
 	numOfReq := 0
 
@@ -49,14 +68,51 @@ func main() {
 			fmt.Println(err)
 			continue
 		}
-
-		serverIndex := numOfReq % len(servers)
-		sddress := servers[serverIndex].Addr
-
+		mu.Lock()
+		serverIndex := numOfReq % len(activeServers)
+		sddress := activeServers[serverIndex].Addr
 		numOfReq++
-		fmt.Println("Adrress", sddress)
+		mu.Unlock()
+
 		go handleConnections(conn, sddress)
 	}
+}
+
+func startHealthChecks() {
+	for {
+		time.Sleep(10 * time.Second)
+		mu.Lock()
+
+		for i := 0; i < len(activeServers); i++ {
+			server := activeServers[i]
+			if !handleHealthCheck("http://localhost" + server.Addr) {
+				fmt.Printf("Server %s is down, moving to inactive\n", server.Addr)
+				inactiveServers = append(inactiveServers, server)
+				activeServers = append(activeServers[:i], activeServers[i+1:]...)
+				i--
+			}
+		}
+
+		for i := 0; i < len(inactiveServers); i++ {
+			server := inactiveServers[i]
+			if handleHealthCheck("http://localhost" + server.Addr) {
+				fmt.Printf("Server %s is back online, restoring to active\n", server.Addr)
+				activeServers = append(activeServers, server)
+				inactiveServers = append(inactiveServers[:i], inactiveServers[i+1:]...)
+				i-- // Adjust the index to account for the restored server
+			}
+		}
+		mu.Unlock()
+	}
+}
+
+func handleHealthCheck(addr string) bool {
+	resp, err := http.Get(addr)
+	if err != nil {
+		return false
+	}
+	defer resp.Body.Close()
+	return resp.StatusCode == http.StatusOK
 }
 
 func handleConnections(conn net.Conn, addr string) {

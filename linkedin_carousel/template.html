@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+        <!-- Fonts -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap" rel="stylesheet">
+        <!--  -->
+        <style>
+
+        body {
+            justify-content: center;
+        }
+        .container {
+          width: 84vw;
+          height: 100%;
+          margin: 50px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          font-family: Arial, Helvetica, sans-serif;
+        }
+        .card-carousel {
+            background-color: black;
+            padding: 3em 2em 2em 2em;
+            color: white;
+            width: 540px;
+            height: 500px;
+            border: 3px solid red;
+        }
+        .header {
+            display: grid;
+            align-items: center;
+            grid-template-columns: 20px 20px;
+            column-gap: 40px;
+            margin-bottom: 2em;
+        }
+        .profilepic {
+            border-radius: 100%;
+            height: 50px;
+            width: 50px;
+            background-color: red;
+        }
+        .name {
+            font-weight: lighter;
+            width: 10em;
+            font-size: 1.2em;
+        }
+        .content {
+            font-size: 2em;
+            font-family: "Gowun Batang", serif;
+            font-weight: 700;
+            font-style: normal;
+        }
+        </style>
+    </head>
+    <body>
+    <main class="container">
+    <div class="card-carousel">
+        <div class="header">
+            <div class="profilepic">
+            <img src="https://api.dicebear.com/9.x/lorelei/svg?seed=Brian" alt="profilepic">
+            </div>
+            <div class="name">
+                Name
+            </div>
+        </div>
+        <div class="content">
+        This is content
+        </div>
+    </div>
+    </main>
+    </body>
+</html>

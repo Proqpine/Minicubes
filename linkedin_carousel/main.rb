@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'grover'
+
 # LinkedIn Carousel Card
 class Card
   NAME = 'Name'
@@ -41,3 +43,9 @@ carousel = Card.new('Lame Ho', 1)
 carousel.add_content = 'We are the world'
 carousel.add_profile_pic = 'https://api.dicebear.com/9.x/notionists-neutral/svg?seed=Maria'
 carousel.create_carousel('a.html')
+
+# Grover.new accepts a URL or inline HTML and optional parameters for Puppeteer
+grover = Grover.new('http://127.0.0.1:5500/template.html', format: 'letter')
+
+# Get a screenshot
+File.write('out.jpg', grover.to_jpeg)

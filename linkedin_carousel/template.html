@@ -100,6 +100,20 @@
             font-weight: 700;
             font-style: normal;
         }
+        #highlight {
+            background-color:#BA9593;
+            padding:0em 0.2em;
+        }
+        .content p {
+            height: 10em;
+            width: 16.4em;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: normal;
+            display: -webkit-box;
+            -webkit-line-clamp: 7;
+            -webkit-box-orient: vertical;
+        }
         </style>
     </head>
     <body>
@@ -128,7 +142,11 @@
             </div>
         </div>
         <div class="content">
-        This is content
+        <p>
+            <span id="highlight">
+                This is content
+            </span>
+        </p>
         </div>
     </div>
     </div>

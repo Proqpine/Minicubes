@@ -6,11 +6,23 @@ KANJI = 'Kanji'
 BYTE = 'Byte'
 ALPHANUMERIC_CHARS = ('0'..'9').to_a + ('A'..'Z').to_a + [' ', '$', '%', '*', '+', '-', '.', '/', ':']
 
+# There is a lot of hardcoding for hardcoding
+# for version 1-9 here specifically for
+# -> Version 4
+# TODO: Generalise the function
+
 CHARACTER_COUNT_BITS = {
   numeric: 10,
   alphanumeric: 9,
   byte: 8,
   kanji: 8
+}
+
+MODE_INDICATOR = {
+  numeric: 0b0001,
+  alphanumeric: 0b0010,
+  byte: 0b0100,
+  kanji: 0b1000
 }
 
 def numeric?(input)
@@ -76,6 +88,17 @@ def encode_byte_data(input)
   encoded_bits.join
 end
 
+def encode_full_string(input)
+  full_bits = []
+  return unless alphanumeric?(input)
+
+  mode = :alphanumeric
+  full_bits << MODE_INDICATOR[mode].to_s(2).rjust(4, '0')
+  full_bits << encode_character_count(input, mode)
+  full_bits << encode_alphanumeric_data(input)
+  full_bits.join
+end
+
 def determine_input_mode(input)
   if numeric?(input)
     mode = :numeric
@@ -97,3 +120,5 @@ def determine_input_mode(input)
     BYTE
   end
 end
+
+puts encode_full_string('HELLO')

@@ -176,3 +176,6 @@ ELSE:
 ----
 
 .Reed-Solomon-Codes
+.Galois Fieldfootnote:[https://www.geeksforgeeks.org/galois-fields-and-its-properties/]
+* Finite size
+* Closure (under of addition and multiplication)

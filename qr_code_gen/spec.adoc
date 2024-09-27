@@ -1,0 +1,178 @@
+= QR Codefootnote:[https://en.wikipedia.org/wiki/QR_code]
+
+.The-design
+----
+* 3 distinctive squares at the corners
+* A smaller 4th square at the corner to normalize the image for
+    . size
+    . orientation
+    . viewing angle
+* small dots are converted to binary numbers
+* validated with an error-correcting algorithm
+----
+
+.Information-capacity
+----
+* amount of data to be represented by a QR code symbol depends on
+    . type (mode or input char set)
+    . version (1,...,40)
+    . error correction level
+* maximum storage capacity is at 40-L (where 40 is the version, and 'L', error correction level L)
+----
+
+.Error-correction
+[source=bash]
+----
+// Constants
+FIELD_SIZE = 256  // For 8-bit symbols
+PRIMITIVE_POLYNOMIAL = 285  // For GF(2^8)
+
+// Convert string to array of integers (ASCII values)
+FUNCTION string_to_integers(input_string):
+    integer_array = []
+    FOR EACH character IN input_string:
+        integer_array.APPEND(ASCII_VALUE_OF(character))
+    RETURN integer_array
+
+// Galois Field operations
+FUNCTION add_in_field(a, b):
+    RETURN (a XOR b)  // XOR for GF(2^m)
+
+FUNCTION multiply_in_field(a, b):
+    result = 0
+    FOR i FROM 0 TO 7:
+        IF (b AND 1) != 0:
+            result = add_in_field(result, a)
+        high_bit_set = (a AND 128) != 0
+        a = (a << 1) AND 255
+        IF high_bit_set:
+            a = add_in_field(a, PRIMITIVE_POLYNOMIAL)
+        b = b >> 1
+    RETURN result
+
+// Generate generator polynomial
+FUNCTION generate_generator_polynomial(n):
+    g = [1]
+    FOR i FROM 0 TO n-1:
+        g = polynomial_multiply(g, [1, power_of_2(i)])
+    RETURN g
+
+// Polynomial multiplication
+FUNCTION polynomial_multiply(p1, p2):
+    result = [0] * (LENGTH(p1) + LENGTH(p2) - 1)
+    FOR i FROM 0 TO LENGTH(p1) - 1:
+        FOR j FROM 0 TO LENGTH(p2) - 1:
+            result[i+j] = add_in_field(result[i+j], multiply_in_field(p1[i], p2[j]))
+    RETURN result
+
+// Encode message
+FUNCTION reed_solomon_encode(message, n_check_symbols):
+    generator = generate_generator_polynomial(n_check_symbols)
+    encoded = message + [0] * n_check_symbols
+    FOR i FROM 0 TO LENGTH(message) - 1:
+        coeff = encoded[i]
+        IF coeff != 0:
+            FOR j FROM 0 TO LENGTH(generator) - 1:
+                encoded[i+j] = add_in_field(encoded[i+j], multiply_in_field(generator[j], coeff))
+    RETURN encoded
+
+// Syndrome calculation
+FUNCTION calculate_syndromes(received, n_check_symbols):
+    synd = [0] * n_check_symbols
+    FOR i FROM 0 TO n_check_symbols - 1:
+        for j FROM 0 TO LENGTH(received) - 1:
+            synd[i] = add_in_field(synd[i], multiply_in_field(received[j], power_of_2(i*j)))
+    RETURN synd
+
+// Find error locations
+FUNCTION find_error_locator(syndromes, n_check_symbols):
+    error_locator = [1]
+    old_locator = [1]
+
+    FOR i FROM 0 TO n_check_symbols - 1:
+        delta = syndromes[i]
+        FOR j FROM 1 TO LENGTH(error_locator) - 1:
+            delta = add_in_field(delta, multiply_in_field(error_locator[-(j+1)], syndromes[i-j]))
+        old_locator = old_locator + [0]
+        IF delta != 0:
+            IF LENGTH(old_locator) > LENGTH(error_locator):
+                new_locator = polynomial_scale(old_locator, delta)
+                old_locator = polynomial_scale(error_locator, inverse_in_field(delta))
+                error_locator = new_locator
+            error_locator = polynomial_add(error_locator, polynomial_scale(old_locator, delta))
+    RETURN error_locator
+
+// Find roots of error locator polynomial (Chien search)
+FUNCTION find_roots(error_locator):
+    roots = []
+    FOR i FROM 0 TO FIELD_SIZE - 1:
+        sum = 0
+        FOR j FROM 0 TO LENGTH(error_locator) - 1:
+            sum = add_in_field(sum, multiply_in_field(error_locator[j], power_of_2(i * j)))
+        IF sum == 0:
+            roots.APPEND(i)
+    RETURN roots
+
+// Calculate error magnitudes (Forney algorithm)
+FUNCTION calculate_error_magnitudes(synd, error_locator, roots):
+    magnitudes = [0] * LENGTH(roots)
+    FOR i FROM 0 TO LENGTH(roots) - 1:
+        x = power_of_2(roots[i])
+        y = 0
+        for j FROM 0 TO LENGTH(synd) - 1:
+            y = add_in_field(y, multiply_in_field(synd[j], power_of_2(j * roots[i])))
+
+        error_locator_prime = 0
+        for j FROM 0 TO LENGTH(error_locator) - 1:
+            if j % 2 == 0:
+                error_locator_prime = add_in_field(error_locator_prime, multiply_in_field(error_locator[j], power_of_2(j * roots[i])))
+
+        magnitudes[i] = multiply_in_field(y, inverse_in_field(error_locator_prime))
+    RETURN magnitudes
+
+// Correct errors
+FUNCTION correct_errors(received, synd, n_check_symbols):
+    error_locator = find_error_locator(synd, n_check_symbols)
+    roots = find_roots(error_locator)
+    IF LENGTH(roots) != LENGTH(error_locator) - 1:
+        RETURN NULL  // Uncorrectable error
+
+    magnitudes = calculate_error_magnitudes(synd, error_locator, roots)
+    corrected = received.COPY()
+    FOR i FROM 0 TO LENGTH(roots) - 1:
+        pos = FIELD_SIZE - 1 - roots[i]
+        corrected[pos] = add_in_field(corrected[pos], magnitudes[i])
+
+    RETURN corrected
+
+// Main Reed-Solomon decoding function
+FUNCTION reed_solomon_decode(received, n_check_symbols):
+    synd = calculate_syndromes(received, n_check_symbols)
+    IF ALL(s == 0 FOR s IN synd):
+        RETURN received[:-n_check_symbols]  // No errors
+
+    corrected = correct_errors(received, synd, n_check_symbols)
+    IF corrected == NULL:
+        RETURN NULL  // Uncorrectable error
+
+    return corrected[:-n_check_symbols]  // Remove check symbols
+
+// Example usage
+message = "The quick brown fox"
+integer_message = string_to_integers(message)
+n_check_symbols = 10
+
+encoded = reed_solomon_encode(integer_message, n_check_symbols)
+// Simulate some errors
+encoded[5] = add_in_field(encoded[5], 1)
+encoded[10] = add_in_field(encoded[10], 1)
+
+decoded = reed_solomon_decode(encoded, n_check_symbols)
+IF decoded != NULL:
+    decoded_message = integers_to_string(decoded)
+    PRINT decoded_message
+ELSE:
+    PRINT "Uncorrectable error"
+----
+
+.Reed-Solomon-Codes

@@ -1,0 +1,5 @@
+node_modules
+*.jpg
+pnpm-lock.yaml
+a.html
+.DS_Store

@@ -179,3 +179,24 @@ ELSE:
 .Galois Fieldfootnote:[https://www.geeksforgeeks.org/galois-fields-and-its-properties/]
 * Finite size
 * Closure (under of addition and multiplication)
+
+.Bits and Bobs
+[cols="25%,25%,25%,25%", options="header"]
+|===
+|Version Range     |Mode           |Character Count Indicator Bits |Encoding Bits Per Group
+
+|**Versions 1-9**  |Numeric        |10 bits                        |3 digits per 10 bits
+|                  |Alphanumeric   |9 bits                         |2 characters per 11 bits
+|                  |Byte           |8 bits                         |1 byte (8 bits) per character
+|                  |Kanji          |8 bits                         |1 Kanji character per 13 bits
+
+|**Versions 10-26**|Numeric        |12 bits                        |3 digits per 10 bits
+|                  |Alphanumeric   |11 bits                        |2 characters per 11 bits
+|                  |Byte           |16 bits                        |1 byte (8 bits) per character
+|                  |Kanji          |10 bits                        |1 Kanji character per 13 bits
+
+|**Versions 27-40**|Numeric        |14 bits                        |3 digits per 10 bits
+|                  |Alphanumeric   |13 bits                        |2 characters per 11 bits
+|                  |Byte           |16 bits                        |1 byte (8 bits) per character
+|                  |Kanji          |12 bits                        |1 Kanji character per 13 bits
+|===

@@ -10,6 +10,27 @@ ALPHANUMERIC_CHARS = ('0'..'9').to_a + ('A'..'Z').to_a + [' ', '$', '%', '*', '+
 # for version 1-9 here specifically for
 # -> Version 4
 # TODO: Generalise the function
+# def determine_input_mode(input)
+#   if numeric?(input)
+#     mode = :numeric
+#     char_count_indicator = encode_character_count(input, mode)
+#     puts "Input: #{input}"
+#     puts 'Mode: Numeric'
+#     puts "Character Count: #{input.length}"
+#     puts "Character Count Indicator (binary): #{char_count_indicator}"
+#   elsif alphanumeric?(input)
+#     mode = :alphanumeric
+#     char_count_indicator = encode_character_count(input, mode)
+#     puts "Input: #{input}"
+#     puts 'Mode: Alphanumeric'
+#     puts "Character Count: #{input.length}"
+#     puts "Character Count Indicator (binary): #{char_count_indicator}"
+#   elsif kanji?(input)
+#     KANJI
+#   else
+#     BYTE
+#   end
+# end
 
 CHARACTER_COUNT_BITS = {
   numeric: 10,
@@ -88,37 +109,76 @@ def encode_byte_data(input)
   encoded_bits.join
 end
 
+def add_mode_bits(arr, mode, input)
+  arr << MODE_INDICATOR[mode].to_s(2).rjust(4, '0') # Mode Indicator
+  arr << encode_character_count(input, mode) # Character count
+end
+
+def byte_align(cou_bits)
+  unless (cou_bits.length % 8).zero?
+    padding_needed = 8 - (cou_bits.length % 8)
+    cou_bits += '0' * padding_needed
+  end
+  cou_bits
+end
+
+def add_padding(ec_level, cou_bits)
+  first_pad = 0xEC.to_s(2).rjust(8, '0') # Ensure 8 bits
+  second_pad = 0x11.to_s(2).rjust(8, '0')
+
+  # Define the size based on the error correction level
+  size = case ec_level
+         when 'L' then 80 * 8
+         when 'M' then 64 * 8
+         when 'Q' then 48 * 8
+         when 'H' then 36 * 8
+         else 80 * 8
+         end
+
+  # Calculate how much padding is needed
+  padding_left = size - cou_bits.length
+
+  # Alternate padding bytes 0xEC and 0x11
+  alternate = padding_left / 8 # Divide by 8 since we add bytes
+
+  cou_bits_arr = []
+  cou_bits_arr << cou_bits
+
+  alternate.times do |i|
+    cou_bits_arr << if i.even?
+                      first_pad # Add 0xEC
+                    else
+                      second_pad # Add 0x11
+                    end
+  end
+  cou_bits_arr.join
+end
+
 def encode_full_string(input)
   full_bits = []
-  return unless alphanumeric?(input)
-
-  mode = :alphanumeric
-  full_bits << MODE_INDICATOR[mode].to_s(2).rjust(4, '0')
-  full_bits << encode_character_count(input, mode)
-  full_bits << encode_alphanumeric_data(input)
-  full_bits.join
-end
-
-def determine_input_mode(input)
   if numeric?(input)
     mode = :numeric
-    char_count_indicator = encode_character_count(input, mode)
-    puts "Input: #{input}"
-    puts 'Mode: Numeric'
-    puts "Character Count: #{input.length}"
-    puts "Character Count Indicator (binary): #{char_count_indicator}"
+    puts NUMERIC
+    add_mode_bits(full_bits, mode, input)
+    full_bits << encode_numeric_data(input) # Data
   elsif alphanumeric?(input)
     mode = :alphanumeric
-    char_count_indicator = encode_character_count(input, mode)
-    puts "Input: #{input}"
-    puts 'Mode: Alphanumeric'
-    puts "Character Count: #{input.length}"
-    puts "Character Count Indicator (binary): #{char_count_indicator}"
-  elsif kanji?(input)
-    KANJI
+    puts ALPHANUMERIC
+    add_mode_bits(full_bits, mode, input)
+    full_bits << encode_alphanumeric_data(input)
   else
-    BYTE
+    mode = :byte
+    puts BYTE
+    add_mode_bits(full_bits, mode, input)
+    full_bits << encode_byte_data(input)
   end
+  full_bits << '0000' # Add terminator
+  full_bits.join
+  cou_bits = full_bits.join.to_s
+  byte_align(cou_bits)
+  add_padding('L', cou_bits)
 end
 
-puts encode_full_string('HELLO')
+puts encode_full_string('HELLO CC WORLD')
+
+# 512 is the Total Number of Data Codewords for this Version '4' and EC Level 'M'

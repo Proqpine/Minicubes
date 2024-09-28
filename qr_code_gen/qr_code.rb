@@ -179,6 +179,8 @@ def encode_full_string(input)
   add_padding('L', cou_bits)
 end
 
-puts encode_full_string('HELLO CC WORLD')
+puts encode_full_string('HELLO WORLD')
 
 # 512 is the Total Number of Data Codewords for this Version '4' and EC Level 'M'
+
+# 00100000010110110000101101111000110100010111001011011100010011010100001101000000111011000001000111101100

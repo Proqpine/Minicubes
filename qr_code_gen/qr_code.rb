@@ -1,36 +1,12 @@
 # frozen_string_literal: true
 
+require 'reedsolomon'
+
 NUMERIC = 'Numeric'
 ALPHANUMERIC = 'Alphanumeric'
 KANJI = 'Kanji'
 BYTE = 'Byte'
 ALPHANUMERIC_CHARS = ('0'..'9').to_a + ('A'..'Z').to_a + [' ', '$', '%', '*', '+', '-', '.', '/', ':']
-
-# There is a lot of hardcoding for hardcoding
-# for version 1-9 here specifically for
-# -> Version 4
-# TODO: Generalise the function
-# def determine_input_mode(input)
-#   if numeric?(input)
-#     mode = :numeric
-#     char_count_indicator = encode_character_count(input, mode)
-#     puts "Input: #{input}"
-#     puts 'Mode: Numeric'
-#     puts "Character Count: #{input.length}"
-#     puts "Character Count Indicator (binary): #{char_count_indicator}"
-#   elsif alphanumeric?(input)
-#     mode = :alphanumeric
-#     char_count_indicator = encode_character_count(input, mode)
-#     puts "Input: #{input}"
-#     puts 'Mode: Alphanumeric'
-#     puts "Character Count: #{input.length}"
-#     puts "Character Count Indicator (binary): #{char_count_indicator}"
-#   elsif kanji?(input)
-#     KANJI
-#   else
-#     BYTE
-#   end
-# end
 
 CHARACTER_COUNT_BITS = {
   numeric: 10,
@@ -180,7 +156,3 @@ def encode_full_string(input)
 end
 
 puts encode_full_string('HELLO WORLD')
-
-# 512 is the Total Number of Data Codewords for this Version '4' and EC Level 'M'
-
-# 00100000010110110000101101111000110100010111001011011100010011010100001101000000111011000001000111101100

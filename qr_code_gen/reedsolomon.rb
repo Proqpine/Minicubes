@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# Implementation of the Reed Solomon Encoding
 class ReedSolomon
   FIELD_SIZE = 256
   PRIMITIVE_POLYNOMIAL = 285
@@ -48,6 +49,17 @@ class ReedSolomon
     g
   end
 
+  def get_ec_codewords_for_version_and_level(_version, level)
+    case level
+    when :L then 20
+    when :M then 18
+    when :Q then 26
+    when :H then 16
+    else
+      raise ArgumentError, 'Invalid error correction level'
+    end
+  end
+
   def encode(message, n_check_symbols)
     # Input validation
     raise ArgumentError, 'Message cannot be empty' if message.empty?
@@ -62,7 +74,7 @@ class ReedSolomon
     encoded = message + [0] * n_check_symbols
     (0...message.length - 1).each do |i|
       coeff = encoded[i]
-      next unless coeff != 0
+      next if coeff.zero
 
       (0...generator.length - 1).each do |j|
         encoded[i + j] = add_in_field(encoded[i + j], multiply_in_field(generator[j], coeff))

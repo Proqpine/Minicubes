@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Generation Framework</title>
+    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const Section = ({ title, children }) => {
+            return (
+                <div className="bg-white shadow-md rounded-lg p-6 mb-6">
+                    <h2 className="text-2xl font-bold mb-4 text-blue-700">{title}</h2>
+                    <div className="text-gray-700">
+                        {children}
+                    </div>
+                </div>
+            );
+        };
+
+        const App = () => {
+            return (
+                <div className="container mx-auto p-4">
+                    <h1 className="text-4xl font-bold mb-8 text-center text-blue-900">QR Code Generation and Reed-Solomon Algorithm Framework</h1>
+
+                    <Section title="1. Galois Field (GF) Basics">
+                        <ul className="list-disc pl-5">
+                            <li>Definition: A finite field with a prime number of elements or a power of a prime number of elements.</li>
+                            <li>GF(2^8) for QR codes: 256 elements, represented by 8-bit bytes.</li>
+                            <li>Field operations:
+                                <ul className="list-disc pl-5">
+                                    <li>Addition: Bitwise XOR</li>
+                                    <li>Multiplication: Polynomial multiplication modulo an irreducible polynomial</li>
+                                </ul>
+                            </li>
+                            <li>Irreducible polynomial for QR codes: x^8 + x^4 + x^3 + x + 1 (binary: 100011101, decimal: 285)</li>
+                        </ul>
+                    </Section>
+
+                    <Section title="Ex. Galois Field (GF) Basics">
+                        <div className="flex items-center mb-4">
+                            <img src="path-to-icon/grid-icon.png" alt="GF Icon" className="w-12 h-12 mr-4"/>
+                            <p className="text-gray-700">
+                                A Galois Field (GF) is a finite field of elements. For QR codes, we use GF(2^8), which has 256 elements represented by 8-bit bytes.
+                            </p>
+                        </div>
+                        <div className="bg-gray-50 p-4 rounded-lg">
+                            <p>Example: Addition in GF(2^8) is done using bitwise XOR.</p>
+                            <table className="w-full border border-gray-300 text-center mt-4">
+                                <thead className="bg-gray-200">
+                                    <tr>
+                                        <th className="p-2 border">Element A (Binary)</th>
+                                        <th className="p-2 border">Element B (Binary)</th>
+                                        <th className="p-2 border">Result (A XOR B)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td className="p-2 border">10001101</td>
+                                        <td className="p-2 border">11001001</td>
+                                        <td className="p-2 border">01000100</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </Section>
+
+                    <Section title="2. QR Code Structure">
+                        <ul className="list-disc pl-5">
+                            <li>Versions: 1 to 40, determining the size of the QR code</li>
+                            <li>Error Correction Levels:
+                                <ul className="list-disc pl-5">
+                                    <li>L (Low): ~7% of codewords can be restored</li>
+                                    <li>M (Medium): ~15% of codewords can be restored</li>
+                                    <li>Q (Quartile): ~25% of codewords can be restored</li>
+                                    <li>H (High): ~30% of codewords can be restored</li>
+                                </ul>
+                            </li>
+                            <li>Mode indicators:
+                                <ul className="list-disc pl-5">
+                                    <li>Numeric: 0001</li>
+                                    <li>Alphanumeric: 0010</li>
+                                    <li>Byte: 0100</li>
+                                    <li>Kanji: 1000</li>
+                                </ul>
+                            </li>
+                            <li>Character count indicator: Varies based on version and mode</li>
+                        </ul>
+                    </Section>
+
+                    <Section title="Ex. QR Code Structure">
+                        <div className="flex items-center mb-4">
+                            <img src="path-to-icon/qr-code-icon.png" alt="QR Icon" className="w-12 h-12 mr-4"/>
+                            <p className="text-gray-700">
+                                A QR code is a matrix of black and white squares. It has various components like finder patterns, timing patterns, and alignment patterns.
+                            </p>
+                        </div>
+                        <div className="bg-gray-50 p-4 rounded-lg">
+                            <img src="path-to-diagram/qr-code-structure.png" alt="QR Structure Diagram" className="w-full mt-4"/>
+                            <p className="text-gray-700 mt-4">
+                                Example: Finder patterns are located in the three corners of the QR code and help in alignment during scanning.
+                            </p>
+                        </div>
+                    </Section>
+
+                    <Section title="3. Encoding Process">
+                        <ol className="list-decimal pl-5">
+                            <li>Data analysis and mode selection</li>
+                            <li>Add mode indicator</li>
+                            <li>Add character count indicator</li>
+                            <li>Encode data</li>
+                            <li>Break into 8-bit codewords</li>
+                            <li>Add terminator and pad bytes if necessary</li>
+                        </ol>
+                    </Section>
+
+                    <Section title="4. Error Correction Coding (Reed-Solomon)">
+                        <ul className="list-disc pl-5">
+                            <li>Generator polynomial creation
+                                <ul className="list-disc pl-5">
+                                    <li>Based on the number of error correction codewords</li>
+                                    <li>Form: g(x) = (x-α^0)(x-α^1)...(x-α^(n-1))</li>
+                                </ul>
+                            </li>
+                            <li>Message polynomial creation
+                                <ul className="list-disc pl-5">
+                                    <li>Treat the message as coefficients of a polynomial</li>
+                                </ul>
+                            </li>
+                            <li>Encoding process
+                                <ul className="list-disc pl-5">
+                                    <li>Multiply message polynomial by x^n (n = number of EC codewords)</li>
+                                    <li>Divide result by generator polynomial</li>
+                                    <li>Remainder becomes the error correction codewords</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </Section>
+
+                    <Section title="5. Polynomial Operations">
+                        <ul className="list-disc pl-5">
+                            <li>Addition: XOR of coefficients</li>
+                            <li>Multiplication: Convolution of coefficients in GF(2^8)</li>
+                            <li>Division: Polynomial long division in GF(2^8)</li>
+                        </ul>
+                    </Section>
+
+                    <Section title="6. Technical Bits and Bytes">
+                        <ul className="list-disc pl-5">
+                            <li>Bit stream creation:
+                                <ul className="list-disc pl-5">
+                                    <li>Concatenate mode indicator, character count, encoded data, terminator, and padding</li>
+                                </ul>
+                            </li>
+                            <li>Byte conversion:
+                                <ul className="list-disc pl-5">
+                                    <li>Group bits into 8-bit codewords</li>
+                                </ul>
+                            </li>
+                            <li>Block creation:
+                                <ul className="list-disc pl-5">
+                                    <li>Divide data into blocks based on QR version and EC level</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </Section>
+
+                    <Section title="7. QR Code Capacity Table (Example for Version 1)">
+                        <table className="w-full border-collapse border border-gray-300">
+                            <thead>
+                                <tr className="bg-gray-200">
+                                    <th className="border border-gray-300 p-2">EC Level</th>
+                                    <th className="border border-gray-300 p-2">EC Words</th>
+                                    <th className="border border-gray-300 p-2">Data Capacity</th>
+                                    <th className="border border-gray-300 p-2">Total Capacity</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td className="border border-gray-300 p-2">L</td>
+                                    <td className="border border-gray-300 p-2">7</td>
+                                    <td className="border border-gray-300 p-2">19 bytes</td>
+                                    <td className="border border-gray-300 p-2">26 bytes</td>
+                                </tr>
+                                <tr>
+                                    <td className="border border-gray-300 p-2">M</td>
+                                    <td className="border border-gray-300 p-2">10</td>
+                                    <td className="border border-gray-300 p-2">16 bytes</td>
+                                    <td className="border border-gray-300 p-2">26 bytes</td>
+                                </tr>
+                                <tr>
+                                    <td className="border border-gray-300 p-2">Q</td>
+                                    <td className="border border-gray-300 p-2">13</td>
+                                    <td className="border border-gray-300 p-2">13 bytes</td>
+                                    <td className="border border-gray-300 p-2">26 bytes</td>
+                                </tr>
+                                <tr>
+                                    <td className="border border-gray-300 p-2">H</td>
+                                    <td className="border border-gray-300 p-2">17</td>
+                                    <td className="border border-gray-300 p-2">9 bytes</td>
+                                    <td className="border border-gray-300 p-2">26 bytes</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </Section>
+
+                    <Section title="8. Reed-Solomon Algorithm Steps">
+                        <ol className="list-decimal pl-5">
+                            <li>Generate generator polynomial</li>
+                            <li>Pad message with zeros (equal to EC codewords)</li>
+                            <li>Divide message polynomial by generator polynomial</li>
+                            <li>XOR remainder with original message to get encoded message</li>
+                        </ol>
+                    </Section>
+
+                    <Section title="9. Interleaving (for higher versions)">
+                        <ol className="list-decimal pl-5">
+                            <li>Divide data into blocks</li>
+                            <li>Apply Reed-Solomon to each block separately</li>
+                            <li>Interleave data and EC codewords from all blocks</li>
+                        </ol>
+                    </Section>
+
+                    <Section title="10. Final Steps">
+                        <ol className="list-decimal pl-5">
+                            <li>Place data and EC codewords in QR code matrix</li>
+                            <li>Add function patterns (finder patterns, timing patterns, etc.)</li>
+                            <li>Apply mask pattern</li>
+                            <li>Add format and version information</li>
+                        </ol>
+                    </Section>
+
+                    <Section title="11. Key Formulas and Relationships">
+                        <ul className="list-disc pl-5">
+                            <li>GF(2^8) multiplication: (a * b) mod P(x), where P(x) is the irreducible polynomial</li>
+                            <li>Number of EC codewords: Depends on version and EC level (lookup table required)</li>
+                            <li>Generator polynomial degree: Equal to the number of EC codewords</li>
+                            <li>QR code capacity: (Version-1) * 4 + 21 modules per side</li>
+                        </ul>
+                    </Section>
+
+                    <Section title="12. Implementation Considerations">
+                        <ul className="list-disc pl-5">
+                            <li>Lookup tables for:
+                                <ul className="list-disc pl-5">
+                                    <li>Alpha to integer conversion in GF(2^8)</li>
+                                    <li>Integer to alpha conversion in GF(2^8)</li>
+                                    <li>EC codewords for each version and EC level</li>
+                                    <li>Capacity for each version and mode</li>
+                                </ul>
+                            </li>
+                            <li>Efficient polynomial arithmetic implementation</li>
+                            <li>Proper handling of leading zero coefficients in polynomials</li>
+                        </ul>
+                    </Section>
+                </div>
+            );
+        };
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>

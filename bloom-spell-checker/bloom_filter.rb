@@ -96,16 +96,16 @@ class BloomFilter
     case @set_of_hash_functions
     when 1
       hash1 = Digest::SHA512.digest(element.to_s).unpack1('L*') % @size_of_bits_array
-      return 'Not in Bloom Filter' unless get_bit(hash1)
+      return "#{element} Not in Bloom Filter" unless get_bit(hash1)
     when 2
       hash1 = Digest::SHA512.digest(element.to_s).unpack1('L*') % @size_of_bits_array
       hash2 = Digest::MD5.digest(element.to_s).unpack1('L*') % @size_of_bits_array
-      return 'Not in Bloom Filter' unless get_bit(hash1) && get_bit(hash2)
+      return "#{element} Not in Bloom Filter" unless get_bit(hash1) && get_bit(hash2)
     when 3
       hash1 = Digest::SHA512.digest(element.to_s).unpack1('L*') % @size_of_bits_array
       hash2 = Digest::MD5.digest(element.to_s).unpack1('L*') % @size_of_bits_array
       hash3 = FNVHash.fnv_1a(element) % @size_of_bits_array
-      return 'Not in Bloom Filter' unless get_bit(hash1) && get_bit(hash2) && get_bit(hash3)
+      return "#{element} Not in Bloom Filter" unless get_bit(hash1) && get_bit(hash2) && get_bit(hash3)
     when 6
       hash1 = Digest::SHA512.digest(element.to_s).unpack1('L*') % @size_of_bits_array
       hash2 = Digest::MD5.digest(element.to_s).unpack1('L*') % @size_of_bits_array
@@ -113,11 +113,11 @@ class BloomFilter
       hash4 = Digest::SHA1.digest(element.to_s).unpack1('L*') % @size_of_bits_array
       hash5 = Digest::SHA256.digest(element.to_s).unpack1('L*') % @size_of_bits_array
       hash6 = Digest::SHA384.digest(element.to_s).unpack1('L*') % @size_of_bits_array
-      return 'Not in Bloom Filter' unless get_bit(hash1) && get_bit(hash2) && get_bit(hash3) &&
+      return "#{element} Not in Bloom Filter" unless get_bit(hash1) && get_bit(hash2) && get_bit(hash3) &&
                                           get_bit(hash4) && get_bit(hash5) && get_bit(hash6)
     end
 
     prob = (1.0 - ((1.0 - (1.0 / @size_of_bits_array))**(@set_of_hash_functions * @num_of_entries)))**@set_of_hash_functions
-    "Might be in Bloom Filter with false positive probability #{prob}"
+    "#{element} Might be in Bloom Filter with false positive probability #{prob}"
   end
 end

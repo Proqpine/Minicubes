@@ -25,21 +25,35 @@ class BloomFilter
   attr_reader :data
 
   def insert(element)
-    if @set_of_hash_functions == 1
+    case @set_of_hash_functions
+    when 1
       hash1 = element.hash.abs % @size_of_bits_array
       @data[hash1] = 1
-    elsif @set_of_hash_functions == 2
+    when 2
       hash1 = element.hash.abs % @size_of_bits_array
       hash2 = Digest::MD5.digest(element.to_s).unpack1('L*')[0] % @size_of_bits_array
       @data[hash1] = 1
       @data[hash2] = 1
-    elsif @set_of_hash_functions == 3
+    when 3
       hash1 = element.hash.abs % @size_of_bits_array
       hash2 = Digest::MD5.digest(element.to_s).unpack1('L*')[0] % @size_of_bits_array
       hash3 = FNVHash.fnv_1a(element) % @size_of_bits_array
       @data[hash1] = 1
       @data[hash2] = 1
       @data[hash3] = 1
+    when 6
+      hash1 = element.hash.abs % @size_of_bits_array
+      hash2 = Digest::MD5.digest(element.to_s).unpack1('L*')[0] % @size_of_bits_array
+      hash3 = FNVHash.fnv_1a(element) % @size_of_bits_array
+      hash4 = Digest::SHA1.digest(element.to_s).unpack1('L*')[0] % @size_of_bits_array
+      hash5 = Digest::SHA256.digest(element.to_s).unpack1('L*')[0] % @size_of_bits_array
+      hash6 = Digest::SHA384.digest(element.to_s).unpack1('L*')[0] % @size_of_bits_array
+      @data[hash1] = 1
+      @data[hash2] = 1
+      @data[hash3] = 1
+      @data[hash4] = 1
+      @data[hash5] = 1
+      @data[hash6] = 1
     else
       raise "Unsupported number of hash functions: #{@set_of_hash_functions}"
     end
@@ -47,19 +61,31 @@ class BloomFilter
   end
 
   def search(element)
-    if @set_of_hash_functions == 1
+    case @set_of_hash_functions
+    when 1
       hash1 = element.hash.abs % @size_of_bits_array
-      return 'Not in Bloom Filter' if @data[hash1] == 0
-    elsif @set_of_hash_functions == 2
+      return 'Not in Bloom Filter' if (@data[hash1]).zero?
+    when 2
       hash1 = element.hash.abs % @size_of_bits_array
       hash2 = Digest::MD5.digest(element.to_s).unpack1('L*') % @size_of_bits_array
-      return 'Not in Bloom Filter' if @data[hash1] == 0 || @data[hash2] == 0
-    elsif @set_of_hash_functions == 3
+      return 'Not in Bloom Filter' if (@data[hash1]).zero || (@data[hash2]).zero
+    when 3
       hash1 = element.hash.abs % @size_of_bits_array
       hash2 = Digest::MD5.digest(element.to_s).unpack1('L*') % @size_of_bits_array
       hash3 = FNVHash.fnv_1a(element) % @size_of_bits_array
-      return 'Not in Bloom Filter' if @data[hash1] == 0 || @data[hash2] == 0 || @data[hash3] == 0
+      return 'Not in Bloom Filter' if (@data[hash1]).zero || (@data[hash2]).zero || (@data[hash3]).zero
+    when 6
+      hash1 = element.hash.abs % @size_of_bits_array
+      hash2 = Digest::MD5.digest(element.to_s).unpack1('L*')[0] % @size_of_bits_array
+      hash3 = FNVHash.fnv_1a(element) % @size_of_bits_array
+      hash4 = Digest::SHA1.digest(element.to_s).unpack1('L*')[0] % @size_of_bits_array
+      hash5 = Digest::SHA256.digest(element.to_s).unpack1('L*')[0] % @size_of_bits_array
+      hash6 = Digest::SHA384.digest(element.to_s).unpack1('L*')[0] % @size_of_bits_array
+      if @data[hash1] == 0 || @data[hash2] == 0 || @data[hash3] == 0 || @data[hash4] == 0 || @data[hash5] == 0 || @data[hash6] == 0
+        return 'Not in Bloom Filter'
+      end
     end
+
     prob = (1.0 - ((1.0 - (1.0 / @size_of_bits_array))**(@set_of_hash_functions * @num_of_entries)))**@set_of_hash_functions
     # prob = (1 - Math.exp(-@set_of_hash_functions * @num_of_entries.to_f / @size_of_bits_array))**@set_of_hash_functions
 

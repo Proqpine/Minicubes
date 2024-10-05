@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'set'
+
 # Determines the number of items that are likely to be stored and
 # the probability of false positives the system can tolerate then
 # uses that to determine the memory requirements and number of hash
@@ -7,7 +9,7 @@
 class Helper
   attr_reader :num_of_entries, :array_size
 
-  FALSE_POSITIVE_RATE = 0.01 # Set a default value for false positive rate
+  FALSE_POSITIVE_RATE = 0.1 # Set a default value for false positive rate
 
   def initialize
     @num_of_entries = 0
@@ -22,8 +24,11 @@ class Helper
       exit 1
     end
 
-    file = File.open(input_data, 'r')
-    @num_of_entries = file.readlines.size
+    unique_words = Set.new
+    File.foreach(input_data) do |line|
+      unique_words.add(line.strip)
+    end
+    @num_of_entries = unique_words.size
     return 0 if @num_of_entries.zero?
 
     @array_size = calculate_array_size
@@ -36,6 +41,6 @@ class Helper
   def calculate_array_size
     return 0 if @num_of_entries.zero?
 
-    -((@num_of_entries * Math.log(FALSE_POSITIVE_RATE)) / (Math.log(2)**2)).round
+    -((@num_of_entries * Math.log(FALSE_POSITIVE_RATE)) / (Math.log(2)**2)).ceil
   end
 end

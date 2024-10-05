@@ -9,7 +9,7 @@ require 'set'
 class Helper
   attr_reader :num_of_entries, :array_size
 
-  FALSE_POSITIVE_RATE = 0.1 # Set a default value for false positive rate
+  FALSE_POSITIVE_RATE = 0.01 # Set a default value for false positive rate
 
   def initialize
     @num_of_entries = 0
@@ -41,6 +41,6 @@ class Helper
   def calculate_array_size
     return 0 if @num_of_entries.zero?
 
-    -((@num_of_entries * Math.log(FALSE_POSITIVE_RATE)) / (Math.log(2)**2)).ceil
+    -((@num_of_entries * Math.log(FALSE_POSITIVE_RATE)) / (Math.log(2)**2)).round
   end
 end

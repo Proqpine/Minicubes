@@ -5,7 +5,7 @@
 class FNVHash
   FNV_PRIME_32 = 16_777_619
   FNV_OFFSET_32 = 2_166_136_261
-  def fnv_1a(input_data)
+  def self.fnv_1a(input_data)
     bytes = input_data.is_a?(String) ? input_data.bytes : input_data
     hash = FNV_OFFSET_32
     bytes.each do |byte|
@@ -16,5 +16,3 @@ class FNVHash
     hash
   end
 end
-
-puts fnv_1a('hello world')

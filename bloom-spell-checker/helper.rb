@@ -15,10 +15,17 @@ class Helper
   end
 
   def determine_size(input_data)
-    raise ArgumentError, 'File does not exist' unless File.exist?(input_data)
+    begin
+      raise ArgumentError, 'File does not exist' unless File.exist?(input_data)
+    rescue ArgumentError => e
+      puts e.message
+      exit 1
+    end
 
     file = File.open(input_data, 'r')
     @num_of_entries = file.readlines.size
+    return 0 if @num_of_entries.zero?
+
     @array_size = calculate_array_size
   end
 
@@ -29,10 +36,6 @@ class Helper
   def calculate_array_size
     return 0 if @num_of_entries.zero?
 
-    -(@num_of_entries * Math.log(FALSE_POSITIVE_RATE) / (Math.log(2)**2)).round
+    -((@num_of_entries * Math.log(FALSE_POSITIVE_RATE)) / (Math.log(2)**2)).round
   end
 end
-
-helper = Helper.new
-puts helper.determine_size('dict.txt')
-puts helper.determine_number_of_hash

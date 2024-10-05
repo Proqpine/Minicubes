@@ -33,6 +33,15 @@ class BloomFilter
       hash2 = Digest::MD5.digest(element.to_s).unpack1('L*')[0] % @size_of_bits_array
       @data[hash1] = 1
       @data[hash2] = 1
+    elsif @set_of_hash_functions == 3
+      hash1 = element.hash.abs % @size_of_bits_array
+      hash2 = Digest::MD5.digest(element.to_s).unpack1('L*')[0] % @size_of_bits_array
+      hash3 = FNVHash.fnv_1a(element) % @size_of_bits_array
+      @data[hash1] = 1
+      @data[hash2] = 1
+      @data[hash3] = 1
+    else
+      raise "Unsupported number of hash functions: #{@set_of_hash_functions}"
     end
     @num_of_entries += 1
   end
@@ -45,8 +54,15 @@ class BloomFilter
       hash1 = element.hash.abs % @size_of_bits_array
       hash2 = Digest::MD5.digest(element.to_s).unpack1('L*') % @size_of_bits_array
       return 'Not in Bloom Filter' if @data[hash1] == 0 || @data[hash2] == 0
+    elsif @set_of_hash_functions == 3
+      hash1 = element.hash.abs % @size_of_bits_array
+      hash2 = Digest::MD5.digest(element.to_s).unpack1('L*') % @size_of_bits_array
+      hash3 = FNVHash.fnv_1a(element) % @size_of_bits_array
+      return 'Not in Bloom Filter' if @data[hash1] == 0 || @data[hash2] == 0 || @data[hash3] == 0
     end
     prob = (1.0 - ((1.0 - (1.0 / @size_of_bits_array))**(@set_of_hash_functions * @num_of_entries)))**@set_of_hash_functions
+    # prob = (1 - Math.exp(-@set_of_hash_functions * @num_of_entries.to_f / @size_of_bits_array))**@set_of_hash_functions
+
     "Might be in Bloom Filter with false positive probability #{prob}"
   end
 end

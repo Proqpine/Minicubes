@@ -3,3 +3,6 @@ node_modules
 pnpm-lock.yaml
 a.html
 .DS_Store
+c
+caldave/credentials.json
+caldave/token.json

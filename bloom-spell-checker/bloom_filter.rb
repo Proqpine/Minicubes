@@ -118,6 +118,7 @@ class BloomFilter
     end
 
     prob = (1.0 - ((1.0 - (1.0 / @size_of_bits_array))**(@set_of_hash_functions * @num_of_entries)))**@set_of_hash_functions
-    "#{element} Might be in Bloom Filter with false positive probability #{prob}"
+    # "#{element} Might be in Bloom Filter with false positive probability #{prob}"
+    "Bad password with #{prob}"
   end
 end

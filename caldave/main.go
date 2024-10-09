@@ -3,12 +3,16 @@ package main
 import (
 	"caldave/internal/config"
 	"caldave/internal/server"
-	"log"
+	"context"
+	"fmt"
+	"os"
 )
 
 func main() {
 	cfg := config.NewConfig()
-	if err := server.Run(cfg); err != nil {
-		log.Fatalf("could not run the server: %v", err)
+	ctx := context.Background()
+	if err := server.Run(cfg, ctx); err != nil {
+		fmt.Fprintf(os.Stderr, "Server error: %s\n", err)
+		os.Exit(1)
 	}
 }

@@ -1,0 +1,167 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <!-- Standard favicon -->
+        <link rel="icon" type="image/x-icon" href="/static/favicon.ico" />
+
+        <!-- Modern browsers -->
+        <link
+            rel="icon"
+            type="image/png"
+            sizes="32x32"
+            href="/static/favicon-32x32.png"
+        />
+        <link
+            rel="icon"
+            type="image/png"
+            sizes="16x16"
+            href="/static/favicon-16x16.png"
+        />
+
+        <!-- Apple Touch Icon -->
+        <link rel="apple-touch-icon" href="/static/apple-touch-icon.png" />
+
+        <!-- Android Chrome -->
+        <link
+            rel="icon"
+            type="image/png"
+            sizes="192x192"
+            href="/static/android-chrome-192x192.png"
+        />
+        <link
+            rel="icon"
+            type="image/png"
+            sizes="512x512"
+            href="/static/android-chrome-512x512.png"
+        />
+
+        <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,container-queries"></script>
+    </head>
+
+    <body>
+        <div class="flex justify-center items-center h-screen w-full">
+            <!-- Calendar UI code from: https://lexingtonthemes.com/tutorials/how-to-create-a-calendar-layout-with-tailwind-css/ -->
+            <div class="max-w-sm w-full mx-auto">
+                <form action="" class="flex flex-col justify-center">
+                    <h3 class="text-slate-500 underline"></h3>
+                    <div
+                        class="available-times mt-4 mb-5 border bg-white p-8 gap-4 grid grid-cols-3 text-sm rounded-lg overflow-hidden shadow-md shadow-gray-500/20"
+                    >
+                        <div
+                            class="available text-gray-500 hover:text-gray-800 cursor-pointer border-[1.5px] border-gray-400 px-2 text-center py-1 rounded-lg"
+                        >
+                            8:30 - 9:30
+                        </div>
+                        <div
+                            class="available text-gray-500 hover:text-gray-800 cursor-pointer border-[1.5px] border-gray-400 px-2 text-center py-1 rounded-lg"
+                        >
+                            8:30 - 9:30
+                        </div>
+                        <div
+                            class="available text-gray-500 hover:text-gray-800 cursor-pointer border-[1.5px] border-gray-400 px-2 text-center py-1 rounded-lg"
+                        >
+                            8:30 - 9:30
+                        </div>
+                        <div
+                            class="available text-gray-500 hover:text-gray-800 cursor-pointer border-[1.5px] border-gray-400 px-2 text-center py-1 rounded-lg"
+                        >
+                            8:30 - 9:30
+                        </div>
+                        <div
+                            class="available text-gray-500 hover:text-gray-800 cursor-pointer border-[1.5px] border-gray-400 px-2 text-center py-1 rounded-lg"
+                        >
+                            8:30 - 9:30
+                        </div>
+                        <div
+                            class="available text-gray-500 hover:text-gray-800 cursor-pointer border-[1.5px] border-gray-400 px-2 text-center py-1 rounded-lg"
+                        >
+                            8:30 - 9:30
+                        </div>
+                    </div>
+                    <button
+                        class="rounded-lg px-3 py-1 bg-slate-600 text-slate-200 hover:bg-slate-900 transition-colors"
+                    >
+                        Book Slot
+                    </button>
+                </form>
+                <h1 class="pb-10 text-center selected"></h1>
+                <div class="grid grid-cols-7 text-center font-bold">
+                    <div>M</div>
+                    <div>T</div>
+                    <div>W</div>
+                    <div>T</div>
+                    <div>F</div>
+                    <div class="text-red-500">S</div>
+                    <div class="text-red-500">S</div>
+                </div>
+
+                <div
+                    class="days mt-4 border bg-gray-200 gap-px grid grid-cols-7 text-sm rounded-lg overflow-hidden shadow-md shadow-gray-500/20"
+                ></div>
+                <!-- Month Display -->
+                <div class="flex items-center mt-4">
+                    <h2
+                        class="flex-auto text-sm font-semibold text-black display"
+                    >
+                        ""
+                    </h2>
+                    <div class="flex items-center gap-1">
+                        <!-- Left Button -->
+                        <button
+                            type="button"
+                            class="left flex flex-none hover:border-blue-500 items-center rounded-full hover:bg-blue-600 hover:text-white border justify-center p-1.5 text-gray-500"
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                class="icon icon-tabler icons-tabler-outline icon-tabler-arrow-narrow-left size-4"
+                            >
+                                <path
+                                    stroke="none"
+                                    d="M0 0h24v24H0z"
+                                    fill="none"
+                                ></path>
+                                <path d="M5 12l14 0"></path>
+                                <path d="M5 12l4 4"></path>
+                                <path d="M5 12l4 -4"></path>
+                            </svg>
+                        </button>
+                        <!-- Right Button -->
+                        <button
+                            type="button"
+                            class="right flex flex-none hover:border-blue-500 items-center rounded-full hover:bg-blue-600 hover:text-white border justify-center p-1.5 text-gray-500"
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                class="icon icon-tabler icons-tabler-outline icon-tabler-arrow-narrow-right size-4"
+                            >
+                                <path
+                                    stroke="none"
+                                    d="M0 0h24v24H0z"
+                                    fill="none"
+                                ></path>
+                                <path d="M5 12l14 0"></path>
+                                <path d="M15 16l4 -4"></path>
+                                <path d="M15 8l4 4"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script src="/static/script.js"></script>
+    </body>
+</html>

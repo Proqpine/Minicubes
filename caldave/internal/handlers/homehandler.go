@@ -4,6 +4,7 @@ import (
 	"embed"
 	"html/template"
 	"net/http"
+	"time"
 )
 
 //go:embed *.html
@@ -11,9 +12,15 @@ var templateFiles embed.FS
 
 var tpl *template.Template
 
+type Calen struct {
+	Day   time.Weekday
+	Month time.Month
+	Year  int
+}
+
 func init() {
 	var err error
-	tpl, err = template.ParseFS(templateFiles, "booking.html")
+	tpl, err = template.ParseFS(templateFiles, "index.html")
 	if err != nil {
 		panic(err)
 	}
@@ -27,3 +34,9 @@ func HomeHandler() http.Handler {
 		}
 	})
 }
+
+// Get the current date
+// How do I handle
+// Months?
+// Years?
+// Days?

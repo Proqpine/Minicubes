@@ -8,8 +8,13 @@ import (
 	"golang.org/x/net/websocket"
 )
 
+type Client struct {
+	connection *websocket.Conn
+	hub        *Hub
+}
+
 type Hub struct {
-	connections map[*websocket.Conn]bool
+	clientsList map[*websocket.Conn]bool
 	broadcast   chan []byte
 	mutex       sync.RWMutex
 }
@@ -20,7 +25,7 @@ type WebSocketHandler struct {
 
 func NewWebSocketHandler() *WebSocketHandler {
 	hub := &Hub{
-		connections: make(map[*websocket.Conn]bool),
+		clientsList: make(map[*websocket.Conn]bool),
 		broadcast:   make(chan []byte),
 	}
 	go hub.run()
@@ -30,12 +35,12 @@ func NewWebSocketHandler() *WebSocketHandler {
 func (h *Hub) run() {
 	for message := range h.broadcast {
 		h.mutex.RLock()
-		for conn := range h.connections {
+		for conn := range h.clientsList {
 			err := websocket.Message.Send(conn, string(message))
 			if err != nil {
 				log.Printf("Error broadcasting message: %v", err)
 				h.mutex.RUnlock()
-				h.removeConnection(conn)
+				h.removeClient(conn)
 				h.mutex.RLock()
 			}
 		}
@@ -43,23 +48,30 @@ func (h *Hub) run() {
 	}
 }
 
-func (h *Hub) addConnection(conn *websocket.Conn) {
+func (h *Hub) addClient(conn *websocket.Conn) {
 	h.mutex.Lock()
-	h.connections[conn] = true
+	h.clientsList[conn] = true
 	h.mutex.Unlock()
 }
 
-func (h *Hub) removeConnection(conn *websocket.Conn) {
+func (h *Hub) removeClient(conn *websocket.Conn) {
 	h.mutex.Lock()
-	delete(h.connections, conn)
+	delete(h.clientsList, conn)
 	conn.Close()
 	h.mutex.Unlock()
+
+	// h.mutex.Lock()
+	// defer h.mutex.Unlock()
+	// if _, ok := h.clientsList[conn]; ok {
+	// 	conn.Close()
+	// 	delete(h.clientsList, conn)
+	// }
 }
 
 func (wsh *WebSocketHandler) handleWS(ws *websocket.Conn) {
 	log.Printf("New connection from %s", ws.RemoteAddr())
-	wsh.hub.addConnection(ws)
-	defer wsh.hub.removeConnection(ws)
+	wsh.hub.addClient(ws)
+	defer wsh.hub.removeClient(ws)
 
 	for {
 		var message string

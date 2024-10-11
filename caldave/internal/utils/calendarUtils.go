@@ -94,24 +94,37 @@ func main() {
 		log.Fatalf("Unable to retrieve Calendar client: %v", err)
 	}
 
-	listSrv := calendar.NewCalendarListService(srv)
-	calenderList, err := listSrv.List().Do()
-	if err != nil {
-		log.Fatalf("Unable to retrieve Calendar list: %v", err)
-	}
+	startDay := time.Now().AddDate(0, 0, -30).Format(time.RFC3339)
+	endDay := time.Now().AddDate(0, 0, 30).Format(time.RFC3339)
+	getEvents(startDay, endDay, srv)
 
-	t := time.Now().AddDate(0, 0, -100).Format(time.RFC3339)
+}
+
+func getCalendars(srv *calendar.Service) {
+	calendarList := calendar.NewCalendarListService(srv)
+	lst, err := calendarList.List().Do()
+	if err != nil {
+		log.Fatalf("Unable to retrieve Calendars: %v", err)
+	}
+	var data EventData
+	for _, item := range lst.Items {
+		data = EventData{
+			CalendarID:   item.Id,
+			CalendarName: item.Summary,
+		}
+	}
+	fmt.Print(data)
+}
+
+func getAvailableDates() {
+
+}
+
+func getEvents(startDay, endDay string, srv *calendar.Service) {
 	events, err := srv.Events.List("primary").ShowDeleted(true).
-		SingleEvents(true).TimeMin(t).MaxResults(10).OrderBy("startTime").Do()
+		SingleEvents(false).TimeMin(startDay).TimeMax(endDay).MaxResults(10).OrderBy("startTime").Do()
 	if err != nil {
 		log.Fatalf("Unable to retrieve next ten of the user's events: %v", err)
-	}
-
-	for _, v := range calenderList.Items {
-		fmt.Printf("Calendar ID: %v\n", v.Id)
-		fmt.Printf("Calendar: %v\n", v.Summary)
-		fmt.Printf("Description: %v\n", v.Description)
-		fmt.Println()
 	}
 
 	fmt.Println("Upcoming events:")

@@ -1,6 +1,24 @@
 // Parts of this script was gotten from
 // https://webdesign.tutsplus.com/learn-how-to-code-a-simple-javascript-calendar-and-datepicker--cms-108322t
 
+const socket = new WebSocket("ws://localhost:8080/ws");
+
+socket.onopen = () => {
+  socket.send("Hellowww");
+};
+
+socket.onmessage = (event) => {
+  console.log("Message from the server:", event.data);
+};
+
+socket.onclose = (event) => {
+  console.log("WebSocket connection closed");
+};
+
+socket.onerror = (error) => {
+  console.error("WebSocket error:", error);
+};
+
 let display = document.querySelector(".display");
 let previous = document.querySelector(".left");
 let next = document.querySelector(".right");

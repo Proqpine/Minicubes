@@ -10,18 +10,29 @@ import (
 	"time"
 
 	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
 	"google.golang.org/api/calendar/v3"
-	"google.golang.org/api/option"
 )
 
-type EventData struct {
+type CalendarData struct {
 	CalendarID   string `json:"id,omitempty"`
 	CalendarName string `json:"summary,omitempty"`
 }
 
+type EventData struct {
+	Calendar  CalendarData
+	EventName string `json:"summary,omitempty"`
+	StartTime time.Time
+	EndTime   time.Time
+}
+
+type Availaibility struct {
+	Day       time.Weekday
+	StartTime time.Time
+	EndTime   time.Time
+}
+
 // Retrieve a token, saves the token, then returns the generated client.
-func getClient(config *oauth2.Config) *http.Client {
+func GetClient(config *oauth2.Config) *http.Client {
 	// The file token.json stores the user's access and refresh tokens, and is
 	// created automatically when the authorization flow completes for the first
 	// time.
@@ -75,69 +86,100 @@ func saveToken(path string, token *oauth2.Token) {
 	json.NewEncoder(f).Encode(token)
 }
 
-func main() {
-	ctx := context.Background()
-	b, err := os.ReadFile("credentials.json")
-	if err != nil {
-		log.Fatalf("Unable to read client secret file: %v", err)
-	}
+// func RunCalendarService() {
+// 	cldDta := getCalendars(srv)
+// 	startDay := time.Now().AddDate(0, 0, -30).Format(time.RFC3339)
+// 	endDay := time.Now().AddDate(0, 0, 30).Format(time.RFC3339)
+// 	getEvents(startDay, endDay, srv, cldDta)
 
-	// If modifying these scopes, delete your previously saved token.json.
-	config, err := google.ConfigFromJSON(b, calendar.CalendarReadonlyScope)
-	if err != nil {
-		log.Fatalf("Unable to parse client secret file to config: %v", err)
-	}
-	client := getClient(config)
+// }
 
-	srv, err := calendar.NewService(ctx, option.WithHTTPClient(client))
-	if err != nil {
-		log.Fatalf("Unable to retrieve Calendar client: %v", err)
-	}
-
-	startDay := time.Now().AddDate(0, 0, -30).Format(time.RFC3339)
-	endDay := time.Now().AddDate(0, 0, 30).Format(time.RFC3339)
-	getEvents(startDay, endDay, srv)
-
-}
-
-func getCalendars(srv *calendar.Service) {
+func GetCalendars(srv *calendar.Service) []CalendarData {
 	calendarList := calendar.NewCalendarListService(srv)
 	lst, err := calendarList.List().Do()
 	if err != nil {
 		log.Fatalf("Unable to retrieve Calendars: %v", err)
 	}
-	var data EventData
+	var data []CalendarData
 	for _, item := range lst.Items {
-		data = EventData{
+		tmp := CalendarData{
 			CalendarID:   item.Id,
 			CalendarName: item.Summary,
 		}
+		data = append(data, tmp)
 	}
-	fmt.Print(data)
+	return data
 }
 
-func getAvailableDates() {
+func GetEvents(startDay, endDay string, srv *calendar.Service, cldData []CalendarData) []EventData {
+	var calendarEvents []EventData
 
-}
+	for _, cld := range cldData {
+		events, err := srv.Events.List(cld.CalendarID).ShowDeleted(true).
+			SingleEvents(false).TimeMin(startDay).TimeMax(endDay).MaxResults(10).Do()
+		if err != nil {
+			log.Fatalf("Unable to retrieve next ten of the user's events: %v", err)
+		}
+		if len(events.Items) == 0 {
 
-func getEvents(startDay, endDay string, srv *calendar.Service) {
-	events, err := srv.Events.List("primary").ShowDeleted(true).
-		SingleEvents(false).TimeMin(startDay).TimeMax(endDay).MaxResults(10).OrderBy("startTime").Do()
-	if err != nil {
-		log.Fatalf("Unable to retrieve next ten of the user's events: %v", err)
-	}
+		} else {
+			for _, item := range events.Items {
+				date := item.Start.DateTime
+				endDate := item.End.DateTime
+				if date == "" {
+					date = item.Start.Date
+				}
+				if endDate == "" {
+					endDate = item.End.Date
+				}
 
-	fmt.Println("Upcoming events:")
-	if len(events.Items) == 0 {
-		fmt.Println("No upcoming events found.")
-	} else {
-		for _, item := range events.Items {
-			date := item.Start.DateTime
-			endDate := item.End.DateTime
-			if date == "" {
-				date = item.Start.Date
+				parsedStartTime, err := parseDateTime(date)
+				if err != nil {
+					// Handle error
+					log.Printf("Error parsing start time: %v", err)
+					continue
+				}
+
+				parsedEndTime, err := parseDateTime(endDate)
+				if err != nil {
+					// Handle error
+					log.Printf("Error parsing end time: %v", err)
+					continue
+				}
+
+				event := EventData{
+					Calendar:  CalendarData{CalendarID: cld.CalendarID, CalendarName: cld.CalendarName},
+					EventName: item.Summary,
+					StartTime: parsedStartTime,
+					EndTime:   parsedEndTime,
+				}
+
+				calendarEvents = append(calendarEvents, event)
 			}
-			fmt.Printf("%v \n(%v - %v)\n", item.Summary, date, endDate)
 		}
 	}
+	return calendarEvents
 }
+
+func parseDateTime(datetime string) (time.Time, error) {
+	t, err := time.Parse(time.RFC3339, datetime)
+	if err == nil {
+		return t, nil
+	}
+
+	t, err = time.Parse("2006-01-02", datetime)
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	return t, nil
+}
+
+func getAvailableTimes(bookedEvents []EventData) {
+
+}
+
+// Parse the events and get all the times and dates
+// Then for each of them sort them by date/day of the week
+// Extract the time and group them
+// Then return the times between the availability that are not events

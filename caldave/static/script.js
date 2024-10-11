@@ -3,12 +3,23 @@
 
 const socket = new WebSocket("ws://localhost:8080/ws");
 
-socket.onopen = () => {
-  socket.send("Hellowww");
-};
+function requestAvailabilty(dateTo) {
+  socket.send(
+    JSON.stringify({
+      type: "REQUEST_AVAILABILITY",
+      payload: {
+        date: dateTo, // format: "2024-10-11"
+      },
+    }),
+  );
+}
 
-socket.onmessage = (event) => {
-  console.log("Message from the server:", event.data);
+socket.onmessage = function (event) {
+  const message = JSON.parse(event.data);
+  if (message.type === "AVAILABILITY_RESPONSE") {
+    const availableTimes = message.payload.availableTimes;
+    console.log("Available times:", availableTimes);
+  }
 };
 
 socket.onclose = (event) => {
@@ -44,7 +55,6 @@ function displayCalendar() {
   display.innerHTML = `${formattedDate}`;
 
   for (let x = 1; x <= firstDayIndex; x++) {
-    console.log(firstDayIndex);
     let emptyDay = document.createElement("div");
     emptyDay.className = "bg-white";
     let button = document.createElement("button");
@@ -108,8 +118,16 @@ function displaySelected() {
       selectedButton.classList.add("text-white");
 
       const selectedDate = e.target.dataset.date;
-      selected.className = "prose text-center text-sm pb-8 pt-8";
-      selected.innerHTML = `Selected Date: <span class="text-red-500">${selectedDate}</span>`;
+      const dateObj = new Date(selectedDate);
+
+      // Format the date as "YYYY-MM-DD" in local time
+      const year = dateObj.getFullYear();
+      const month = String(dateObj.getMonth() + 1).padStart(2, "0"); // Months are 0-based
+      const day = String(dateObj.getDate()).padStart(2, "0");
+
+      const formattedDate = `${year}-${month}-${day}`;
+      console.log(formattedDate);
+      requestAvailabilty(formattedDate);
     });
   });
 }

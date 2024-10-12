@@ -3,15 +3,49 @@
 
 const socket = new WebSocket("ws://localhost:8080/ws");
 
-function requestAvailabilty(dateTo) {
-  socket.send(
-    JSON.stringify({
-      type: "REQUEST_AVAILABILITY",
-      payload: {
-        date: dateTo, // format: "2024-10-11"
-      },
-    }),
-  );
+function requestAvailability(dateTo) {
+  sendMessage({
+    type: "REQUEST_AVAILABILITY",
+    payload: {
+      date: dateTo,
+    },
+  });
+}
+
+function updateEvents(startDate, endDate) {
+  sendMessage({
+    type: "UPDATE_AVAILABILITY",
+    payload: {
+      startDate: startDate,
+      endDate: endDate,
+    },
+  });
+}
+
+let isWebSocketReady = false;
+let pendingMessages = [];
+
+socket.onopen = function (event) {
+  console.log("WebSocket connection established");
+  isWebSocketReady = true;
+  sendPendingMessages();
+  displayCalendar();
+  displaySelected();
+};
+
+function sendMessage(message) {
+  if (isWebSocketReady) {
+    socket.send(JSON.stringify(message));
+  } else {
+    pendingMessages.push(message);
+  }
+}
+
+function sendPendingMessages() {
+  while (pendingMessages.length > 0) {
+    const message = pendingMessages.shift();
+    socket.send(JSON.stringify(message));
+  }
 }
 
 socket.onmessage = function (event) {
@@ -19,15 +53,20 @@ socket.onmessage = function (event) {
   if (message.type === "AVAILABILITY_RESPONSE") {
     const availableTimes = message.payload.availableTimes;
     console.log("Available times:", availableTimes);
+    displayAvailableTimes(availableTimes);
+  } else if (message.type === "EVENTS_UPDATED") {
+    console.log("Events updated successfully");
   }
 };
 
 socket.onclose = (event) => {
   console.log("WebSocket connection closed");
+  isWebSocketReady = false;
 };
 
 socket.onerror = (error) => {
   console.error("WebSocket error:", error);
+  isWebSocketReady = false;
 };
 
 let display = document.querySelector(".display");
@@ -44,7 +83,6 @@ let month = date.getMonth();
 function displayCalendar() {
   const firstDay = new Date(year, month, 0);
   const firstDayIndex = firstDay.getDay();
-
   const lastDay = new Date(year, month + 1, 0);
   const numberOfDays = lastDay.getDate();
 
@@ -98,11 +136,21 @@ function displayCalendar() {
       dayDiv.classList.add("current-date");
     }
   }
+  updateEventsForCurrentMonth();
 }
-displayCalendar();
+
+function updateEventsForCurrentMonth() {
+  const startDate = new Date(year, month, 1);
+  const endDate = new Date(year, month + 1, 0);
+  updateEvents(
+    startDate.toISOString().split("T")[0],
+    endDate.toISOString().split("T")[0],
+  );
+}
 
 function displaySelected() {
   const dayElements = document.querySelectorAll(".days button");
+  const selectedDay = document.querySelector(".selected-date");
   dayElements.forEach((day) => {
     day.addEventListener("click", (e) => {
       dayElements.forEach((d) => {
@@ -118,46 +166,75 @@ function displaySelected() {
       selectedButton.classList.add("text-white");
 
       const selectedDate = e.target.dataset.date;
+      selectedDay.innerHTML = `${selectedDate}`;
       const dateObj = new Date(selectedDate);
 
-      // Format the date as "YYYY-MM-DD" in local time
       const year = dateObj.getFullYear();
-      const month = String(dateObj.getMonth() + 1).padStart(2, "0"); // Months are 0-based
+      const month = String(dateObj.getMonth() + 1).padStart(2, "0");
       const day = String(dateObj.getDate()).padStart(2, "0");
 
       const formattedDate = `${year}-${month}-${day}`;
       console.log(formattedDate);
-      requestAvailabilty(formattedDate);
+      requestAvailability(formattedDate);
     });
   });
 }
-displaySelected();
 
-previous.addEventListener("click", () => {
-  days.innerHTML = "";
-  selected.innerHTML = "";
+function displayAvailableTimes(availableTimes) {
+  const timeSlotsContainer = document.querySelector(".time-slots");
+  timeSlotsContainer.innerHTML = "";
 
-  if (month < 0) {
-    month = 11;
-    year = year - 1;
-  }
+  availableTimes.forEach((timeSlot) => {
+    const start = timeSlot.start;
+    const end = timeSlot.end;
+    const startTime = new Date(`2000-01-01T${start}`);
+    const endTime = new Date(`2000-01-01T${end}`);
 
-  month = month - 1;
-  date.setMonth(month);
+    while (startTime < endTime) {
+      const slotStart = startTime.toTimeString().slice(0, 5);
+      startTime.setMinutes(startTime.getMinutes() + 30);
+      const slotEnd = startTime.toTimeString().slice(0, 5);
 
-  displayCalendar();
-  displaySelected();
-});
+      const timeSlotDiv = document.createElement("div");
+      // class="available text-gray-500 hover:text-gray-800 cursor-pointer border-[1.5px] border-gray-400 px-2 text-center py-1 rounded-lg"
+      timeSlotDiv.className = "flex items-center justify-center";
+      timeSlotDiv.innerHTML = `
+           <span class="text-gray-500 w-full inline-block hover:text-gray-800 cursor-pointer border-[1.5px] border-gray-400 px-2 text-center py-1 rounded-lg transition-colors duration-200 ease-in-out hover:bg-gray-100">
+             ${slotStart} - ${slotEnd}
+           </span>
+         `;
+      timeSlotsContainer.appendChild(timeSlotDiv);
+    }
+  });
+}
 
-next.addEventListener("click", () => {
-  days.innerHTML = "";
-  selected.innerHTML = "";
-  if (month > 11) {
-    month = 0;
-    year = year + 1;
-  }
-  month = month + 1;
-  date.setMonth(month);
-  displayCalendar();
-  displaySelected();
+document.addEventListener("DOMContentLoaded", () => {
+  previous.addEventListener("click", () => {
+    days.innerHTML = "";
+    selected.innerHTML = "";
+
+    if (month < 0) {
+      month = 11;
+      year = year - 1;
+    }
+
+    month = month - 1;
+    date.setMonth(month);
+
+    displayCalendar();
+    displaySelected();
+  });
+
+  next.addEventListener("click", () => {
+    days.innerHTML = "";
+    selected.innerHTML = "";
+    if (month > 11) {
+      month = 0;
+      year = year + 1;
+    }
+    month = month + 1;
+    date.setMonth(month);
+    displayCalendar();
+    displaySelected();
+  });
 });

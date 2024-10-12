@@ -1,0 +1,3 @@
+.THINGS TO DO
+
+* Change the number of the days that are being fetch dynamically (Like a sliding window)

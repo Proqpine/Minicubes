@@ -116,7 +116,7 @@ func GetEvents(startDay, endDay string, srv *calendar.Service, cldData []Calenda
 
 	for _, cld := range cldData {
 		events, err := srv.Events.List(cld.CalendarID).ShowDeleted(true).
-			SingleEvents(false).TimeMin(startDay).TimeMax(endDay).MaxResults(30).Do()
+			SingleEvents(false).TimeMin(startDay).TimeMax(endDay).MaxResults(90).Do()
 		if err != nil {
 			log.Fatalf("Unable to retrieve next ten of the user's events: %v", err)
 		}

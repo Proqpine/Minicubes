@@ -3,7 +3,6 @@ module caldave
 go 1.23.0
 
 require (
-	github.com/kr/pretty v0.3.1
 	golang.org/x/net v0.30.0
 	golang.org/x/oauth2 v0.23.0
 	google.golang.org/api v0.199.0
@@ -21,8 +20,6 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.4 // indirect
 	github.com/googleapis/gax-go/v2 v2.13.0 // indirect
-	github.com/kr/text v0.2.0 // indirect
-	github.com/rogpeppe/go-internal v1.9.0 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.54.0 // indirect
 	go.opentelemetry.io/otel v1.29.0 // indirect

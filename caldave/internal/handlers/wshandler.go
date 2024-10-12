@@ -13,7 +13,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kr/pretty"
 	"golang.org/x/net/websocket"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/calendar/v3"
@@ -25,6 +24,8 @@ type MessageType string
 const (
 	RequestAvailability  MessageType = "REQUEST_AVAILABILITY"
 	AvailabilityResponse MessageType = "AVAILABILITY_RESPONSE"
+	UpdateAvailaibilty   MessageType = "UPDATE_AVAILABILITY"
+	EventUpdated         MessageType = "EVENTS_UPDATED"
 )
 
 type Message struct {
@@ -55,6 +56,11 @@ type ScheduleConfig struct {
 type AvailabilityResponseData struct {
 	Date           string     `json:"date"`
 	AvailableTimes []TimeSlot `json:"availableTimes"`
+}
+
+type UpdateEventsRequest struct {
+	StartDate string `json:"startDate"` // Format: "2024-10-11"
+	EndDate   string `json:"endDate"`   // Format: "2024-11-11"
 }
 
 type Client struct {
@@ -195,6 +201,8 @@ func (c *Client) ReadPump() {
 		switch message.Type {
 		case string(RequestAvailability):
 			c.handleAvailabilityRequest(message)
+		case string(UpdateAvailaibilty):
+			c.handleUpdateEventsRequest(message)
 		default:
 			c.Hub.Broadcast <- message
 		}
@@ -251,6 +259,30 @@ func (c *Client) handleAvailabilityRequest(message Message) {
 	c.Send <- response
 }
 
+func (c *Client) handleUpdateEventsRequest(message Message) {
+	reqBytes, _ := json.Marshal(message.Payload)
+	var request UpdateEventsRequest
+	if err := json.Unmarshal(reqBytes, &request); err != nil {
+		log.Printf("Error parsing update events request: %v", err)
+		return
+	}
+
+	handler := c.Hub.wsHandler
+
+	startDate, _ := time.Parse("2006-01-02", request.StartDate)
+	endDate, _ := time.Parse("2006-01-02", request.EndDate)
+
+	calendars := utils.GetCalendars(handler.calendarService)
+	handler.events = utils.GetEvents(startDate.Format(time.RFC3339), endDate.Format(time.RFC3339), handler.calendarService, calendars)
+
+	response := Message{
+		Type:    string(EventUpdated),
+		Payload: nil,
+	}
+
+	c.Send <- response
+}
+
 // Function to calculate available times
 func getAvailableTimesForDate(date time.Time, events []utils.EventData, config ScheduleConfig) []TimeSlot {
 	// Determine the business hours for the given date
@@ -278,8 +310,8 @@ func getAvailableTimesForDate(date time.Time, events []utils.EventData, config S
 			dayEvents = append(dayEvents, event)
 		}
 	}
-	fmt.Printf("%# v\n", pretty.Formatter(events))
-	fmt.Printf("%# v\n", pretty.Formatter(dayEvents))
+	// fmt.Printf("%# v\n", pretty.Formatter(events))
+	// fmt.Printf("%# v\n", pretty.Formatter(dayEvents))
 
 	// Sort events by start time
 	sort.Slice(dayEvents, func(i, j int) bool {
@@ -331,7 +363,8 @@ func (wsh *WebSocketHandler) refreshEvents() {
 }
 
 func (wsh *WebSocketHandler) updateEvents() {
-	startDay := time.Now().AddDate(0, 0, -1).Format(time.RFC3339)
+
+	startDay := time.Now().AddDate(0, 0, -30).Format(time.RFC3339)
 	endDay := time.Now().AddDate(0, 0, 60).Format(time.RFC3339)
 
 	calendars := utils.GetCalendars(wsh.calendarService)

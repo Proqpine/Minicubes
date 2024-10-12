@@ -4,6 +4,7 @@ import (
 	"caldave/internal/utils"
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -12,6 +13,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/kr/pretty"
 	"golang.org/x/net/websocket"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/calendar/v3"
@@ -37,6 +39,17 @@ type AvailabilityRequest struct {
 type TimeSlot struct {
 	Start string `json:"start"` // Format: "HH:MM"
 	End   string `json:"end"`   // Format: "HH:MM"
+}
+
+type BusinessHours struct {
+	StartTime string // Business start time, e.g., "08:00"
+	EndTime   string // Business end time, e.g., "17:00"
+}
+
+type ScheduleConfig struct {
+	WeekdayHours  map[time.Weekday]BusinessHours // Custom business hours for specific weekdays
+	DefaultHours  BusinessHours                  // Default business hours
+	BufferMinutes int                            // Buffer time around events, in minutes
 }
 
 type AvailabilityResponseData struct {
@@ -206,9 +219,26 @@ func (c *Client) handleAvailabilityRequest(message Message) {
 		return
 	}
 
-
 	handler := c.Hub.wsHandler
-	availableTimes := getAvailableTimesForDate(requestedDate, handler.events)
+
+	schedule := ScheduleConfig{
+		WeekdayHours: map[time.Weekday]BusinessHours{
+			time.Monday:    {StartTime: "08:00", EndTime: "17:00"},
+			time.Tuesday:   {StartTime: "08:30", EndTime: "17:00"},
+			time.Wednesday: {StartTime: "09:00", EndTime: "18:00"},
+			time.Thursday:  {StartTime: "08:00", EndTime: "17:00"},
+			time.Friday:    {StartTime: "08:00", EndTime: "17:30"},
+			time.Saturday:  {StartTime: "10:00", EndTime: "14:00"}, // Optional business hours on weekends
+			time.Sunday:    {StartTime: "00:00", EndTime: "00:00"}, // Closed on Sundays
+		},
+		DefaultHours: BusinessHours{
+			StartTime: "08:00",
+			EndTime:   "17:30", // Default fallback if no specific day is defined
+		},
+		BufferMinutes: 10, // 10-minute buffer before and after events
+	}
+
+	availableTimes := getAvailableTimesForDate(requestedDate, handler.events, schedule)
 
 	response := Message{
 		Type: string(AvailabilityResponse),
@@ -222,10 +252,24 @@ func (c *Client) handleAvailabilityRequest(message Message) {
 }
 
 // Function to calculate available times
-func getAvailableTimesForDate(date time.Time, events []utils.EventData) []TimeSlot {
-	businessStart := time.Date(date.Year(), date.Month(), date.Day(), 8, 0, 0, 0, date.Location())
-	businessEnd := time.Date(date.Year(), date.Month(), date.Day(), 17, 0, 0, 0, date.Location())
+func getAvailableTimesForDate(date time.Time, events []utils.EventData, config ScheduleConfig) []TimeSlot {
+	// Determine the business hours for the given date
+	hours, ok := config.WeekdayHours[date.Weekday()]
+	if !ok {
+		hours = config.DefaultHours
+	}
 
+	fmt.Println(hours)
+
+	// Parse business start and end times
+	businessStart, _ := time.Parse("15:04", hours.StartTime)
+	businessEnd, _ := time.Parse("15:04", hours.EndTime)
+
+	// Apply the date to the business start and end times
+	businessStart = time.Date(date.Year(), date.Month(), date.Day(), businessStart.Hour(), businessStart.Minute(), 0, 0, date.Location())
+	businessEnd = time.Date(date.Year(), date.Month(), date.Day(), businessEnd.Hour(), businessEnd.Minute(), 0, 0, date.Location())
+
+	// Filter events for the day
 	var dayEvents []utils.EventData
 	for _, event := range events {
 		if event.StartTime.Year() == date.Year() &&
@@ -234,6 +278,8 @@ func getAvailableTimesForDate(date time.Time, events []utils.EventData) []TimeSl
 			dayEvents = append(dayEvents, event)
 		}
 	}
+	fmt.Printf("%# v\n", pretty.Formatter(events))
+	fmt.Printf("%# v\n", pretty.Formatter(dayEvents))
 
 	// Sort events by start time
 	sort.Slice(dayEvents, func(i, j int) bool {
@@ -245,14 +291,21 @@ func getAvailableTimesForDate(date time.Time, events []utils.EventData) []TimeSl
 	currentTime := businessStart
 
 	for _, event := range dayEvents {
-		if currentTime.Before(event.StartTime) {
+		// Apply buffer to event start and end times
+		eventStart := event.StartTime.Add(-time.Duration(config.BufferMinutes) * time.Minute)
+		eventEnd := event.EndTime.Add(time.Duration(config.BufferMinutes) * time.Minute)
+
+		// Check for available slot before the event
+		if currentTime.Before(eventStart) {
 			availableSlots = append(availableSlots, TimeSlot{
 				Start: currentTime.Format("15:04"),
-				End:   event.StartTime.Format("15:04"),
+				End:   eventStart.Format("15:04"),
 			})
 		}
-		if event.EndTime.After(currentTime) {
-			currentTime = event.EndTime
+
+		// Move current time to event end if it's later than the current time
+		if eventEnd.After(currentTime) {
+			currentTime = eventEnd
 		}
 	}
 
@@ -279,7 +332,7 @@ func (wsh *WebSocketHandler) refreshEvents() {
 
 func (wsh *WebSocketHandler) updateEvents() {
 	startDay := time.Now().AddDate(0, 0, -1).Format(time.RFC3339)
-	endDay := time.Now().AddDate(0, 0, 30).Format(time.RFC3339)
+	endDay := time.Now().AddDate(0, 0, 60).Format(time.RFC3339)
 
 	calendars := utils.GetCalendars(wsh.calendarService)
 	wsh.events = utils.GetEvents(startDay, endDay, wsh.calendarService, calendars)

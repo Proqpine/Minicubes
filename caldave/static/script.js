@@ -23,9 +23,9 @@ function updateEvents(startDate, endDate) {
 }
 
 let isWebSocketReady = false;
-let pendingMessages = [];
+const pendingMessages = [];
 
-socket.onopen = function (event) {
+socket.onopen = (event) => {
   console.log("WebSocket connection established");
   isWebSocketReady = true;
   sendPendingMessages();
@@ -48,7 +48,7 @@ function sendPendingMessages() {
   }
 }
 
-socket.onmessage = function (event) {
+socket.onmessage = (event) => {
   const message = JSON.parse(event.data);
   if (message.type === "AVAILABILITY_RESPONSE") {
     const availableTimes = message.payload.availableTimes;
@@ -69,14 +69,14 @@ socket.onerror = (error) => {
   isWebSocketReady = false;
 };
 
-let display = document.querySelector(".display");
-let previous = document.querySelector(".left");
-let next = document.querySelector(".right");
-let days = document.querySelector(".days");
-let selected = document.querySelector(".selected");
-let day = document.querySelector(".day");
+const display = document.querySelector(".display");
+const previous = document.querySelector(".left");
+const next = document.querySelector(".right");
+const days = document.querySelector(".days");
+const selected = document.querySelector(".selected");
+const day = document.querySelector(".day");
 
-let date = new Date();
+const date = new Date();
 let year = date.getFullYear();
 let month = date.getMonth();
 
@@ -86,29 +86,29 @@ function displayCalendar() {
   const lastDay = new Date(year, month + 1, 0);
   const numberOfDays = lastDay.getDate();
 
-  let formattedDate = date.toLocaleString("en-UK", {
+  const formattedDate = date.toLocaleString("en-UK", {
     month: "long",
     year: "numeric",
   });
   display.innerHTML = `${formattedDate}`;
 
   for (let x = 1; x <= firstDayIndex; x++) {
-    let emptyDay = document.createElement("div");
+    const emptyDay = document.createElement("div");
     emptyDay.className = "bg-white";
-    let button = document.createElement("button");
+    const button = document.createElement("button");
     button.type = "button";
     button.className =
       "mx-auto flex size-10 w-full items-center justify-center text-gray-400 hover:text-blue-600";
-    let time = document.createElement("time");
+    const time = document.createElement("time");
     button.appendChild(time);
     emptyDay.appendChild(button);
     days.appendChild(emptyDay);
   }
 
   for (let i = 1; i <= numberOfDays; i++) {
-    let currentDate = new Date(year, month, i);
+    const currentDate = new Date(year, month, i);
 
-    let dayDiv = document.createElement("div");
+    const dayDiv = document.createElement("div");
     dayDiv.className = "bg-white";
 
     const button = document.createElement("button");

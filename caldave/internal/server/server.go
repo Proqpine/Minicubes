@@ -23,6 +23,7 @@ func Run(cfg *config.Config, ctx context.Context) error {
 
 	mux.Handle("GET /static/", http.StripPrefix("/static/", fs))
 	mux.Handle("GET /ws", wsHandler.Handler())
+	mux.Handle("GET /booking", handlers.BookingHandler())
 	mux.Handle("GET /", handlers.HomeHandler())
 
 	loggedMux := middleware.Logging(mux)

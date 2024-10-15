@@ -4,7 +4,6 @@ import (
 	"caldave/internal/utils"
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -291,7 +290,6 @@ func getAvailableTimesForDate(date time.Time, events []utils.EventData, config S
 		hours = config.DefaultHours
 	}
 
-	fmt.Println(hours)
 
 	// Parse business start and end times
 	businessStart, _ := time.Parse("15:04", hours.StartTime)

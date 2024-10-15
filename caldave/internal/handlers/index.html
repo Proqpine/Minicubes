@@ -41,99 +41,77 @@
         <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,container-queries"></script>
     </head>
 
-    <body>
-        <div class="flex justify-center items-center h-screen w-full">
-            <!-- Calendar UI code from: https://lexingtonthemes.com/tutorials/how-to-create-a-calendar-layout-with-tailwind-css/ -->
-            <div class="max-w-xl w-full mx-auto">
-                <form action="" class="flex flex-col justify-center mt-10">
-                    <h3
-                        class="text-gray-600 text-lg selected-date text-center"
-                    ></h3>
-                    <div
-                        class="time-slots mt-2 mb-4 border bg-white p-8 text-sm gap-2 grid grid-cols-4 text-sm rounded-lg overflow-hidden shadow-md shadow-gray-500/20"
-                    ></div>
-                    <button
-                        class="rounded-lg px-3 py-1 bg-slate-600 text-slate-200 hover:bg-slate-900 transition-colors"
+    <!doctype html>
+    <html lang="en">
+        <head>
+            <meta charset="UTF-8" />
+            <meta
+                name="viewport"
+                content="width=device-width, initial-scale=1.0"
+            />
+            <title>CalendarPro - Organize Your Life</title>
+            <script src="https://cdn.tailwindcss.com"></script>
+        </head>
+        <body>
+            <div
+                class="flex justify-center p-4 sm:p-6 md:p-10 min-h-screen w-full bg-gray-100"
+            >
+                <main
+                    class="flex flex-col items-center relative w-full max-w-6xl"
+                >
+                    <!-- <div
+                        class="w-full h-10 sm:h-28 md:h-48 border-2 rounded-lg bg-blue-500 mb-4 flex items-center justify-center text-white text-xl sm:text-2xl font-bold"
                     >
-                        Book Slot
-                    </button>
-                </form>
-                <h1 class="pb-10 text-center selected"></h1>
-                <div class="grid grid-cols-7 text-center font-bold">
-                    <div>M</div>
-                    <div>T</div>
-                    <div>W</div>
-                    <div>T</div>
-                    <div>F</div>
-                    <div class="text-red-500">S</div>
-                    <div class="text-red-500">S</div>
-                </div>
-
-                <div
-                    class="days mt-4 border bg-gray-200 gap-px grid grid-cols-7 text-sm rounded-lg overflow-hidden shadow-md shadow-gray-500/20"
-                ></div>
-                <!-- Month Display -->
-                <div class="flex items-center mt-4 mb-10">
-                    <h2
-                        class="flex-auto text-sm font-semibold text-black display"
-                    >
-                        ""
-                    </h2>
-                    <div class="flex items-center gap-1">
-                        <!-- Left Button -->
-                        <button
-                            type="button"
-                            class="left flex flex-none hover:border-blue-500 items-center rounded-full hover:bg-blue-600 hover:text-white border justify-center p-1.5 text-gray-500"
+                        CalendarPro
+                    </div> -->
+                    <div class="relative w-full">
+                        <span
+                            class="absolute top-2 left-2 sm:top-4 sm:left-4 md:top-24 md:left-72 -rotate-12 bg-green-500 text-slate-100 shadow-md z-0 rounded-xl p-2 text-xs sm:text-sm md:text-base"
+                            >Organize</span
+                        >
+                        <span
+                            class="absolute top-12 right-2 sm:top-16 sm:right-4 md:top-32 md:right-56 rotate-12 bg-red-500 text-slate-100 shadow-md z-20 rounded-xl p-2 text-xs sm:text-sm md:text-base"
+                            >Plan</span
+                        >
+                        <span
+                            class="absolute bottom-2 left-2 sm:bottom-4 sm:left-4 md:bottom-24 md:left-48 rotate-12 bg-pink-500 text-slate-100 shadow-md z-20 rounded-xl p-2"
                         >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
+                                class="icon icon-tabler icon-tabler-mood-wink-2"
+                                width="50"
+                                height="50"
                                 viewBox="0 0 24 24"
+                                stroke-width="1.5"
+                                stroke="#ffffff"
                                 fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
-                                class="icon icon-tabler icons-tabler-outline icon-tabler-arrow-narrow-left size-4"
                             >
                                 <path
                                     stroke="none"
                                     d="M0 0h24v24H0z"
                                     fill="none"
-                                ></path>
-                                <path d="M5 12l14 0"></path>
-                                <path d="M5 12l4 4"></path>
-                                <path d="M5 12l4 -4"></path>
-                            </svg>
-                        </button>
-                        <!-- Right Button -->
-                        <button
-                            type="button"
-                            class="right flex flex-none hover:border-blue-500 items-center rounded-full hover:bg-blue-600 hover:text-white border justify-center p-1.5 text-gray-500"
-                        >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                class="icon icon-tabler icons-tabler-outline icon-tabler-arrow-narrow-right size-4"
-                            >
+                                />
                                 <path
-                                    stroke="none"
-                                    d="M0 0h24v24H0z"
-                                    fill="none"
-                                ></path>
-                                <path d="M5 12l14 0"></path>
-                                <path d="M15 16l4 -4"></path>
-                                <path d="M15 8l4 4"></path>
+                                    d="M12 21a9 9 0 1 1 0 -18a9 9 0 0 1 0 18z"
+                                />
+                                <path d="M9 10h-.01" />
+                                <path d="M14.5 15a3.5 3.5 0 0 1 -5 0" />
+                                <path d="M15.5 8.5l-1.5 1.5l1.5 1.5" />
                             </svg>
-                        </button>
+                        </span>
+                        <div class="flex justify-center">
+                            <p
+                                class="text-[12vw] sm:text-[10vw] md:text-[11vw] leading-none font-bold text-left py-12 sm:py-16 md:py-24 relative z-10 max-w-[90%] sm:max-w-[80%] md:max-w-[60%]"
+                            >
+                                Simplify Your Schedule
+                            </p>
+                        </div>
                     </div>
-                </div>
+                    <!-- <div class="mt-4 sm:mt-6 md:mt-8"></div> -->
+                </main>
             </div>
-        </div>
-        <script src="/static/script.js"></script>
-    </body>
+        </body>
+    </html>
 </html>

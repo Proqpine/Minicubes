@@ -20,7 +20,7 @@ type Calen struct {
 
 func init() {
 	var err error
-	tpl, err = template.ParseFS(templateFiles, "index.html")
+	tpl, err = template.ParseFS(templateFiles, "*.html")
 	if err != nil {
 		panic(err)
 	}
@@ -28,15 +28,9 @@ func init() {
 
 func HomeHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		err := tpl.Execute(w, "Hello World")
+		err := tpl.ExecuteTemplate(w, "index.html", "Hello World")
 		if err != nil {
 			http.Error(w, "Error rendering page", http.StatusInternalServerError)
 		}
 	})
 }
-
-// Get the current date
-// How do I handle
-// Months?
-// Years?
-// Days?

@@ -55,6 +55,9 @@ type ScheduleConfig struct {
 type AvailabilityResponseData struct {
 	Date           string     `json:"date"`
 	AvailableTimes []TimeSlot `json:"availableTimes"`
+	// Meet with David 9:00 - 10:00
+	// 8:00 - 8:50
+	// 10:10 - 17:00
 }
 
 type UpdateEventsRequest struct {
@@ -289,7 +292,6 @@ func getAvailableTimesForDate(date time.Time, events []utils.EventData, config S
 	if !ok {
 		hours = config.DefaultHours
 	}
-
 
 	// Parse business start and end times
 	businessStart, _ := time.Parse("15:04", hours.StartTime)

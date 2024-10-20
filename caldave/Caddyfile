@@ -1,0 +1,7 @@
+:2015 {
+	respond "Hello, World!"
+}
+
+:2016 {
+	respond "Goodbye, World!"
+}
